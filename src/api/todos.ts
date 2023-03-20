@@ -4,3 +4,7 @@ import { client } from '../utils/fetchClient';
 export const getTodos = (userId: number) => {
   return client.get<Todo[]>(`/todos?userId=${userId}`);
 };
+
+export const addNewTodo = (userId: number, newTodo: Todo) => {
+  return client.post<Todo>(`/todos?userId=${userId}`, newTodo);
+};
