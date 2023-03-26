@@ -17,7 +17,7 @@ export const Notification: React.FC<Props> = ({
     setTimeout(() => {
       closeNotification();
     }, 3000);
-  }, []);
+  }, [isHidden]);
 
   return (
     <div
@@ -31,7 +31,11 @@ export const Notification: React.FC<Props> = ({
         },
       )}
     >
-      <button type="button" className="delete" onClick={closeNotification} />
+      <button
+        type="button"
+        className="delete"
+        onClick={closeNotification}
+      />
       {errorType}
     </div>
   );

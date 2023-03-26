@@ -1,7 +1,14 @@
 import React, {
-  useCallback, useEffect, useMemo, useState,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
 } from 'react';
-import { getTodos, addNewTodo } from './api/todos';
+import {
+  getTodos,
+  addTodo,
+  deleteTodo,
+} from './api/todos';
 import { Todo } from './types/Todo';
 import { TodoList } from './components/TodoList';
 import { Filter } from './components/Filter';
@@ -10,38 +17,36 @@ import { Notification } from './components/Notification';
 import { Filter as FilterType } from './types/Filter';
 import { UserWarning } from './UserWarning';
 import { Error as ErrorType } from './types/Error';
-
-const USER_ID = 6686;
+import { USER_ID } from './variables/variables';
 
 export const App: React.FC = () => {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [filterType, setFilterType] = useState(FilterType.ALL);
   const [errorType, setErrorType] = useState(ErrorType.NONE);
-  const [isHidden, setIsHidden] = useState(false);
   const [tempTodo, setTempTodo] = useState<Todo | null>(null);
-  const [isInputDisabled, setIsInputDisabled] = useState(false);
+  const [isHidden, setHidden] = useState(false);
+  const [isInputActive, setInputActive] = useState(false);
   const [inputTitle, setInputTitle] = useState('');
+  const [idsToDelete, setIdsToDelete] = useState<number[]>([]);
 
   useEffect(() => {
-    const loadTodos = async () => {
-      try {
-        setErrorType(ErrorType.NONE);
-        const todosFromServer = await getTodos(USER_ID);
+    setErrorType(ErrorType.NONE);
 
-        setTodos(todosFromServer);
-      } catch {
+    getTodos(USER_ID)
+      .then(data => {
+        setTodos(data);
+      })
+      .catch(() => {
         setErrorType(ErrorType.LOAD);
-      }
-    };
-
-    loadTodos();
+        setHidden(false);
+      });
   }, []);
 
   const activeTodos = useMemo(() => {
     return todos.filter((todo) => !todo.completed).length;
   }, [todos]);
   const completedTodos = useMemo(() => {
-    return todos.filter((todo) => todo.completed).length;
+    return todos.filter((todo) => todo.completed);
   }, [todos]);
 
   const changeFilter = useCallback(
@@ -72,33 +77,57 @@ export const App: React.FC = () => {
     [filterTodos, filterType],
   );
 
-  const addTodo = async (newTodo: Todo) => {
+  const addTodoItem = (newTodo: Todo) => {
     const { title } = newTodo;
 
-    if (title === '') {
+    if (title.trim() === '') {
       setErrorType(ErrorType.TITLE);
+      setHidden(false);
 
       return;
     }
 
-    setIsInputDisabled(true);
+    setTempTodo({ ...newTodo, id: 0 });
+    setInputActive(true);
 
-    try {
-      const temporaryTodo: Todo = { ...newTodo };
-
-      setTempTodo(temporaryTodo);
-
-      const todoSuccessfullyAdded = await addNewTodo(USER_ID, newTodo);
-
-      if (todoSuccessfullyAdded) {
-        setIsInputDisabled(false);
-        setTodos(prevTodos => [...prevTodos, todoSuccessfullyAdded]);
+    addTodo(USER_ID, newTodo)
+      .then(result => {
+        setTodos(prevTodos => [...prevTodos, result]);
+      })
+      .catch(() => {
+        setErrorType(ErrorType.ADD);
+        setHidden(false);
+      })
+      .finally(() => {
+        setInputActive(false);
         setTempTodo(null);
-        setInputTitle('');
-      }
-    } catch {
-      setErrorType(ErrorType.ADD);
-    }
+      });
+  };
+
+  const deleteTodoItem = async (todoId: number) => {
+    setIdsToDelete(prevState => [...prevState, todoId]);
+
+    deleteTodo(todoId).then(() => {
+      setTodos(prevTodos => prevTodos.filter(
+        (todo) => todo.id !== todoId,
+      ));
+    })
+      .catch(() => {
+        setErrorType(ErrorType.DELETE);
+        setHidden(false);
+      })
+      .finally(() => {
+        setIdsToDelete([]);
+      });
+  };
+
+  const clearCompleted = () => {
+    const completedIds = completedTodos.map(todo => todo.id);
+
+    setIdsToDelete(completedIds);
+    completedTodos.forEach((todo) => {
+      deleteTodoItem(todo.id);
+    });
   };
 
   if (!USER_ID) {
@@ -112,8 +141,8 @@ export const App: React.FC = () => {
       <div className="todoapp__content">
         <Header
           activeTodos={activeTodos}
-          onAdd={addTodo}
-          isInputDisabled={isInputDisabled}
+          onAdd={addTodoItem}
+          isInputActive={isInputActive}
           inputTitle={inputTitle}
           setInputTitle={setInputTitle}
         />
@@ -121,20 +150,23 @@ export const App: React.FC = () => {
           <>
             <TodoList
               todos={visibleTodos}
-              loadingTodo={tempTodo}
+              tempTodo={tempTodo}
+              onDelete={deleteTodoItem}
+              idsToDelete={idsToDelete}
             />
             <Filter
               notCompleted={activeTodos}
-              completed={completedTodos}
+              completed={completedTodos.length}
               changeFilter={changeFilter}
+              clearCompleted={clearCompleted}
             />
           </>
         )}
       </div>
-      {!!errorType && (
+      {errorType && (
         <Notification
           errorType={errorType}
-          closeNotification={() => setIsHidden(true)}
+          closeNotification={() => setHidden(true)}
           isHidden={isHidden}
         />
       )}

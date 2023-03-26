@@ -6,7 +6,7 @@ import { Form } from '../Form';
 type Props = {
   activeTodos: number,
   onAdd: (todo: Todo) => void,
-  isInputDisabled: boolean,
+  isInputActive: boolean,
   inputTitle: string,
   setInputTitle: React.Dispatch<React.SetStateAction<string>>,
 };
@@ -14,7 +14,7 @@ type Props = {
 export const Header: React.FC<Props> = ({
   activeTodos,
   onAdd,
-  isInputDisabled,
+  isInputActive,
   inputTitle,
   setInputTitle,
 }) => {
@@ -31,7 +31,7 @@ export const Header: React.FC<Props> = ({
       )}
       <Form
         onAdd={onAdd}
-        isInputDisabled={isInputDisabled}
+        isInputActive={isInputActive}
         inputTitle={inputTitle}
         setInputTitle={setInputTitle}
       />

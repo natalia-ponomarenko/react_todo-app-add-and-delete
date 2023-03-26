@@ -3,31 +3,39 @@ import { Todo } from '../../types/Todo';
 
 type Props = {
   todos: Todo[],
-  loadingTodo: Todo | null,
+  tempTodo: Todo | null,
+  onDelete: (id: number) => void,
+  idsToDelete: number[],
 };
 
-export const TodoList: React.FC<Props> = ({ todos, loadingTodo }) => {
+export const TodoList: React.FC<Props> = ({
+  todos,
+  tempTodo,
+  onDelete,
+  idsToDelete,
+}) => {
   return (
     <section className="todoapp__main">
-      {todos.map(todo => (
-        <TodoItem key={todo.id} todo={todo} />
-      ))}
-      {loadingTodo && (
-        <div className="todo">
-          <label className="todo__status-label">
-            <input type="checkbox" className="todo__status" />
-          </label>
+      {todos.map(todo => {
+        const isLoading = idsToDelete.some(id => id === todo.id);
 
-          <span className="todo__title">{loadingTodo.title}</span>
-          <button type="button" className="todo__remove">×</button>
-
-          <div className="modal overlay is-active">
-            <div className="modal-background has-background-white-ter" />
-            <div className="loader" />
-          </div>
-        </div>
+        return (
+          <TodoItem
+            key={todo.id}
+            todo={todo}
+            onDelete={onDelete}
+            isLoading={isLoading}
+          />
+        );
+      })}
+      {tempTodo && (
+        <TodoItem
+          key={tempTodo.id}
+          todo={tempTodo}
+          onDelete={() => {}}
+          isLoading
+        />
       )}
-
     </section>
   );
 };

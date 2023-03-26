@@ -5,13 +5,15 @@ import { Filter as FilterType } from '../../types/Filter';
 type Props = {
   notCompleted: number;
   completed: number;
-  changeFilter: (filter: FilterType) => void;
+  changeFilter: (filter: FilterType) => void,
+  clearCompleted: () => void,
 };
 
 export const Filter: React.FC<Props> = ({
   notCompleted,
   completed,
   changeFilter,
+  clearCompleted,
 }) => {
   const [selected, setSelected] = useState(FilterType.ALL);
 
@@ -42,7 +44,11 @@ export const Filter: React.FC<Props> = ({
       </nav>
 
       {completed > 0 && (
-        <button type="button" className="todoapp__clear-completed">
+        <button
+          type="button"
+          className="todoapp__clear-completed"
+          onClick={clearCompleted}
+        >
           Clear completed
         </button>
       )}

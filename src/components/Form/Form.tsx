@@ -1,8 +1,9 @@
 import { Todo } from '../../types/Todo';
+import { USER_ID } from '../../variables/variables';
 
 type Props = {
   onAdd: (todo: Todo) => void,
-  isInputDisabled: boolean,
+  isInputActive: boolean,
   inputTitle: string,
   setInputTitle: React.Dispatch<React.SetStateAction<string>>,
 };
@@ -10,7 +11,7 @@ type Props = {
 export const Form:React.FC<Props> = (
   {
     onAdd,
-    isInputDisabled,
+    isInputActive,
     inputTitle,
     setInputTitle,
   },
@@ -20,12 +21,13 @@ export const Form:React.FC<Props> = (
 
     const newTodo = {
       id: 0,
-      userId: 6686,
+      userId: USER_ID,
       title: inputTitle,
       completed: false,
     };
 
     onAdd(newTodo);
+    setInputTitle('');
   };
 
   return (
@@ -36,7 +38,7 @@ export const Form:React.FC<Props> = (
         placeholder="What needs to be done?"
         value={inputTitle}
         onChange={(event) => setInputTitle(event.target.value)}
-        disabled={!!isInputDisabled}
+        disabled={isInputActive}
       />
     </form>
   );
